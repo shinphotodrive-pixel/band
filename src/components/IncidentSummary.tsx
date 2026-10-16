@@ -386,19 +386,28 @@ export const IncidentSummary: React.FC<IncidentSummaryProps> = ({
             </span>
           </div>
           <ul className="space-y-1.5 text-xs text-slate-800">
-            {incident.bandUrls.map((url, idx) => (
-              <li key={idx} className="truncate">
-                <a
-                  href={url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline font-mono truncate max-w-full"
-                >
-                  <span className="truncate">{url.replace('https://', '')}</span>
-                  <ExternalLink className="w-3 h-3 shrink-0" />
-                </a>
-              </li>
-            ))}
+            {incident.bandUrls.map((url, idx) => {
+              const cleanUrl = url.split(' ')[0];
+              const label = url.includes('(') ? url.substring(url.indexOf('(')) : '';
+              return (
+                <li key={idx} className="truncate">
+                  <a
+                    href={cleanUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-800 hover:underline font-mono truncate max-w-full"
+                  >
+                    <span className="truncate">{cleanUrl.replace('https://', '')}</span>
+                    {label && (
+                      <span className="font-sans text-[11px] bg-red-100 text-red-800 font-semibold px-1.5 py-0.2 rounded shrink-0">
+                        {label}
+                      </span>
+                    )}
+                    <ExternalLink className="w-3 h-3 shrink-0" />
+                  </a>
+                </li>
+              );
+            })}
           </ul>
           <p className="text-[11px] text-slate-500 mt-2 italic">
             * 강제퇴장 당해 URL을 모르는 밴드는 고객센터 문의 시 가입 당시 명의로 추적 요청합니다.

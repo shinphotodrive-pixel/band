@@ -25,8 +25,19 @@ export default function App() {
   // Load incident data from localStorage or fallback to defaults
   const [incident, setIncident] = useState<IncidentData>(() => {
     try {
-      const saved = localStorage.getItem('band_incident_data_v1');
+      const saved = localStorage.getItem('band_incident_data_v2');
       if (saved) return JSON.parse(saved);
+      const v1 = localStorage.getItem('band_incident_data_v1');
+      if (v1) {
+        const parsed = JSON.parse(v1);
+        if (!parsed.bandUrls?.some((u: string) => u.includes('a1acb2q8NaX2u'))) {
+          parsed.bandUrls = [
+            'https://band.us/n/a1acb2q8NaX2u (상품 판매 커뮤니케이션방)',
+            ...(parsed.bandUrls || []).filter((u: string) => !u.includes('a1acb2q8NaX2u'))
+          ];
+        }
+        return parsed;
+      }
     } catch (e) {
       console.error(e);
     }
@@ -70,7 +81,7 @@ export default function App() {
   // Persist incident data
   useEffect(() => {
     try {
-      localStorage.setItem('band_incident_data_v1', JSON.stringify(incident));
+      localStorage.setItem('band_incident_data_v2', JSON.stringify(incident));
     } catch (e) {
       console.error(e);
     }
