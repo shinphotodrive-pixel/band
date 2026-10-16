@@ -9,6 +9,14 @@ import { Step3PoliceAndAlert } from './components/Step3PoliceAndAlert';
 import { EvidenceChecklist } from './components/EvidenceChecklist';
 import { PrintReportModal } from './components/PrintReportModal';
 import { Toast } from './components/Toast';
+import { NextCriticalStepWidget } from './components/NextCriticalStepWidget';
+import { MemberAlertGenerator } from './components/MemberAlertGenerator';
+import { FraudPatternGuide } from './components/FraudPatternGuide';
+import { SecurePasswordVault } from './components/SecurePasswordVault';
+import { VictimCaseStudies } from './components/VictimCaseStudies';
+import { IncidentTimeline } from './components/IncidentTimeline';
+import { UrgencyMeter } from './components/UrgencyMeter';
+import { ActionableRecoveryTutorial } from './components/ActionableRecoveryTutorial';
 import { 
   ShieldCheck, 
   MessageSquare, 
@@ -16,32 +24,90 @@ import {
   Camera, 
   Layers, 
   FileText, 
-  PhoneCall,
-  ExternalLink,
-  LifeBuoy
+  PhoneCall, 
+  ExternalLink, 
+  LifeBuoy, 
+  MessageCircle, 
+  FileWarning,
+  KeyRound,
+  FolderArchive,
+  Clock,
+  Video
 } from 'lucide-react';
 
+const TARGET_COMMUNICATION_URL = 'https://band.us/n/a1acb2q8NaX2u (상품 판매 커뮤니케이션방)';
+const TARGET_URL_KEYWORD = 'a1acb2q8NaX2u';
+
+export function mergeAndPrioritizeIncidentData(stored: Partial<IncidentData> | null): IncidentData {
+  if (!stored) {
+    return defaultIncidentData;
+  }
+
+  // Preserve custom band names or fallback to defaults
+  const bandNames = Array.isArray(stored.bandNames) && stored.bandNames.length > 0
+    ? [...stored.bandNames]
+    : [...defaultIncidentData.bandNames];
+
+  // Ensure '상품 판매 커뮤니케이션방' is always included and prioritized in bandNames
+  if (!bandNames.some(name => name.includes('상품 판매'))) {
+    bandNames.unshift('상품 판매 커뮤니케이션방');
+  }
+
+  const hackerNames = Array.isArray(stored.hackerNames) && stored.hackerNames.length > 0
+    ? stored.hackerNames
+    : defaultIncidentData.hackerNames;
+
+  // Process band URLs to prioritize and standardize 'https://band.us/n/a1acb2q8NaX2u (상품 판매 커뮤니케이션방)'
+  let existingUrls = Array.isArray(stored.bandUrls) && stored.bandUrls.length > 0
+    ? [...stored.bandUrls]
+    : [...defaultIncidentData.bandUrls];
+
+  // Filter out any existing variations of target URL to avoid duplicates
+  const otherUrls = existingUrls.filter(u => typeof u === 'string' && !u.includes(TARGET_URL_KEYWORD));
+
+  // Prioritize the target URL at index 0
+  const combinedUrls = [TARGET_COMMUNICATION_URL, ...otherUrls];
+
+  // Deduplicate while preserving order
+  const uniqueUrls: string[] = [];
+  for (const url of combinedUrls) {
+    const trimmed = typeof url === 'string' ? url.trim() : '';
+    if (trimmed && !uniqueUrls.includes(trimmed)) {
+      uniqueUrls.push(trimmed);
+    }
+  }
+
+  return {
+    bandNames,
+    hackerNames,
+    bandUrls: uniqueUrls,
+    incidentDateTime: stored.incidentDateTime || defaultIncidentData.incidentDateTime,
+    notes: stored.notes || defaultIncidentData.notes,
+    reporterName: stored.reporterName || defaultIncidentData.reporterName,
+    reporterContact: stored.reporterContact || defaultIncidentData.reporterContact
+  };
+}
+
 export default function App() {
-  // Load incident data from localStorage or fallback to defaults
+  // Load and merge incident data from localStorage, prioritizing the confirmed URL for 상품 판매 커뮤니케이션방
   const [incident, setIncident] = useState<IncidentData>(() => {
     try {
-      const saved = localStorage.getItem('band_incident_data_v2');
-      if (saved) return JSON.parse(saved);
-      const v1 = localStorage.getItem('band_incident_data_v1');
-      if (v1) {
-        const parsed = JSON.parse(v1);
-        if (!parsed.bandUrls?.some((u: string) => u.includes('a1acb2q8NaX2u'))) {
-          parsed.bandUrls = [
-            'https://band.us/n/a1acb2q8NaX2u (상품 판매 커뮤니케이션방)',
-            ...(parsed.bandUrls || []).filter((u: string) => !u.includes('a1acb2q8NaX2u'))
-          ];
-        }
-        return parsed;
+      // Check v2 storage first, then v1 fallback
+      const savedV2 = localStorage.getItem('band_incident_data_v2');
+      if (savedV2) {
+        const parsed = JSON.parse(savedV2);
+        return mergeAndPrioritizeIncidentData(parsed);
+      }
+
+      const savedV1 = localStorage.getItem('band_incident_data_v1');
+      if (savedV1) {
+        const parsed = JSON.parse(savedV1);
+        return mergeAndPrioritizeIncidentData(parsed);
       }
     } catch (e) {
-      console.error(e);
+      console.error('Failed to load incident data from localStorage:', e);
     }
-    return defaultIncidentData;
+    return mergeAndPrioritizeIncidentData(defaultIncidentData);
   });
 
   // Load checklist state
@@ -69,7 +135,7 @@ export default function App() {
   });
 
   // Active view tab filter
-  const [activeTab, setActiveTab] = useState<'all' | 'step1' | 'step2' | 'step3' | 'evidence'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'step1' | 'step2' | 'step3' | 'member-alert' | 'fraud-guide' | 'password-vault' | 'case-studies' | 'timeline' | 'tutorials' | 'evidence'>('all');
 
   // Print modal state
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
@@ -146,7 +212,7 @@ export default function App() {
 
   const handleResetIncident = () => {
     if (window.confirm('기본 피해 데이터(상품 판매방, 다락방, OCS모임방, 이상철, 전시숙)로 되돌리시겠습니까?')) {
-      setIncident(defaultIncidentData);
+      setIncident(mergeAndPrioritizeIncidentData(defaultIncidentData));
       showToast('초기 데이터로 재설정되었습니다.');
     }
   };
@@ -171,6 +237,22 @@ export default function App() {
           incident={incident}
           onUpdateIncident={setIncident}
           onResetIncident={handleResetIncident}
+          onOpenPrint={() => setIsPrintModalOpen(true)}
+        />
+
+        {/* High-Stress Focus: Next Critical Incomplete Step Widget */}
+        <NextCriticalStepWidget
+          checklist={checklist}
+          onToggleCheck={handleToggleCheck}
+          onSelectTab={setActiveTab}
+          onCopyText={handleCopyText}
+        />
+
+        {/* Urgency Meter: Time-Sensitive Recovery Progress Bar */}
+        <UrgencyMeter
+          checklist={checklist}
+          onToggleCheck={handleToggleCheck}
+          onSelectTab={setActiveTab}
         />
 
         {/* View Switcher Tabs */}
@@ -226,6 +308,78 @@ export default function App() {
             </button>
             <button
               type="button"
+              onClick={() => setActiveTab('member-alert')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
+                activeTab === 'member-alert'
+                  ? 'bg-amber-400 text-slate-950 shadow-xs font-bold'
+                  : 'hover:text-slate-900 text-amber-800 bg-amber-50/80 hover:bg-amber-100'
+              }`}
+            >
+              <MessageCircle className="w-4 h-4 text-amber-600" />
+              회원 경고문 생성기 (카톡/문자)
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('fraud-guide')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
+                activeTab === 'fraud-guide'
+                  ? 'bg-rose-600 text-white shadow-xs font-bold'
+                  : 'hover:text-slate-900 text-rose-800 bg-rose-50/80 hover:bg-rose-100'
+              }`}
+            >
+              <FileWarning className="w-4 h-4 text-rose-600" />
+              주요 사기 유형 식별 가이드
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('password-vault')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
+                activeTab === 'password-vault'
+                  ? 'bg-emerald-600 text-white shadow-xs font-bold'
+                  : 'hover:text-slate-900 text-emerald-800 bg-emerald-50/80 hover:bg-emerald-100'
+              }`}
+            >
+              <KeyRound className="w-4 h-4 text-emerald-600" />
+              보안 암호 기록장 & 생성기
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('case-studies')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
+                activeTab === 'case-studies'
+                  ? 'bg-indigo-600 text-white shadow-xs font-bold'
+                  : 'hover:text-slate-900 text-indigo-800 bg-indigo-50/80 hover:bg-indigo-100'
+              }`}
+            >
+              <FolderArchive className="w-4 h-4 text-indigo-600" />
+              피해 사례 & 실태 조사
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('timeline')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
+                activeTab === 'timeline'
+                  ? 'bg-blue-600 text-white shadow-xs font-bold'
+                  : 'hover:text-slate-900 text-blue-800 bg-blue-50/80 hover:bg-blue-100'
+              }`}
+            >
+              <Clock className="w-4 h-4 text-blue-600" />
+              사고 대응 타임라인
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('tutorials')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
+                activeTab === 'tutorials'
+                  ? 'bg-sky-600 text-white shadow-xs font-bold'
+                  : 'hover:text-slate-900 text-sky-800 bg-sky-50/80 hover:bg-sky-100'
+              }`}
+            >
+              <Video className="w-4 h-4 text-sky-600" />
+              실전 튜토리얼 & 영상 가이드
+            </button>
+            <button
+              type="button"
               onClick={() => setActiveTab('evidence')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition ${
                 activeTab === 'evidence'
@@ -260,12 +414,60 @@ export default function App() {
           />
         )}
 
+        {(activeTab === 'all' || activeTab === 'member-alert') && (
+          <MemberAlertGenerator
+            incident={incident}
+            onCopyText={handleCopyText}
+          />
+        )}
+
+        {(activeTab === 'all' || activeTab === 'fraud-guide') && (
+          <FraudPatternGuide
+            incident={incident}
+            onCopyText={handleCopyText}
+          />
+        )}
+
         {(activeTab === 'all' || activeTab === 'step3') && (
           <Step3PoliceAndAlert
             incident={incident}
             checklist={checklist}
             onToggleCheck={handleToggleCheck}
             onCopyText={handleCopyText}
+          />
+        )}
+
+        {(activeTab === 'all' || activeTab === 'password-vault') && (
+          <SecurePasswordVault
+            onShowToast={showToast}
+            onCopyText={handleCopyText}
+          />
+        )}
+
+        {(activeTab === 'all' || activeTab === 'case-studies') && (
+          <VictimCaseStudies
+            incident={incident}
+            onShowToast={showToast}
+            onSelectTab={setActiveTab}
+          />
+        )}
+
+        {(activeTab === 'all' || activeTab === 'timeline') && (
+          <IncidentTimeline
+            incident={incident}
+            checklist={checklist}
+            onSelectTab={setActiveTab}
+            onCopyText={handleCopyText}
+            onShowToast={showToast}
+            onOpenPrint={() => setIsPrintModalOpen(true)}
+          />
+        )}
+
+        {(activeTab === 'all' || activeTab === 'tutorials') && (
+          <ActionableRecoveryTutorial
+            incident={incident}
+            onSelectTab={setActiveTab}
+            onShowToast={showToast}
           />
         )}
 

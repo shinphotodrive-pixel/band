@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldAlert, AlertTriangle, PhoneCall, ExternalLink, Printer } from 'lucide-react';
+import { ShieldAlert, AlertTriangle, PhoneCall, ExternalLink, Printer, FileDown } from 'lucide-react';
 
 interface HeaderProps {
   onOpenPrint: () => void;
@@ -42,11 +42,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenPrint, progressPercent }) 
             <button
               onClick={onOpenPrint}
               type="button"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white text-xs sm:text-sm font-semibold rounded-lg border border-white/20 transition-all shadow-sm"
-              title="사건 보고서 인쇄 및 PDF 저장"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white text-red-700 hover:bg-red-50 active:scale-95 text-xs sm:text-sm font-extrabold rounded-lg border border-white/80 transition-all shadow-md cursor-pointer"
+              title="현재 피해 밴드와 해커 정보가 포함된 리포트 다운로드 및 인쇄 (PDF)"
             >
-              <Printer className="w-4 h-4" />
-              <span className="hidden sm:inline">신고서</span> 인쇄/PDF
+              <FileDown className="w-4 h-4 text-red-600" />
+              <span>피해 요약 리포트 다운로드 / 인쇄 (PDF)</span>
             </button>
           </div>
         </div>

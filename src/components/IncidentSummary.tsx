@@ -11,19 +11,22 @@ import {
   ExternalLink, 
   AlertCircle,
   Clock,
-  RotateCcw
+  RotateCcw,
+  FileDown
 } from 'lucide-react';
 
 interface IncidentSummaryProps {
   incident: IncidentData;
   onUpdateIncident: (data: IncidentData) => void;
   onResetIncident: () => void;
+  onOpenPrint?: () => void;
 }
 
 export const IncidentSummary: React.FC<IncidentSummaryProps> = ({
   incident,
   onUpdateIncident,
-  onResetIncident
+  onResetIncident,
+  onOpenPrint
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<IncidentData>(incident);
@@ -114,14 +117,27 @@ export const IncidentSummary: React.FC<IncidentSummaryProps> = ({
 
         <div className="flex items-center gap-2">
           {!isEditing ? (
-            <button
-              onClick={handleOpenEdit}
-              type="button"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700/80 hover:bg-slate-600 text-slate-100 text-xs font-semibold border border-slate-600 transition"
-            >
-              <Edit3 className="w-3.5 h-3.5 text-blue-400" />
-              피해 정보 편집 / 밴드 추가
-            </button>
+            <div className="flex items-center gap-2 flex-wrap">
+              {onOpenPrint && (
+                <button
+                  onClick={onOpenPrint}
+                  type="button"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-bold shadow-md transition active:scale-95 cursor-pointer"
+                  title="현재 피해 밴드와 해커 정보가 포함된 리포트 다운로드 및 인쇄"
+                >
+                  <FileDown className="w-3.5 h-3.5 text-white" />
+                  <span>피해 요약 리포트 다운로드 / 인쇄 (PDF)</span>
+                </button>
+              )}
+              <button
+                onClick={handleOpenEdit}
+                type="button"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700/80 hover:bg-slate-600 text-slate-100 text-xs font-semibold border border-slate-600 transition"
+              >
+                <Edit3 className="w-3.5 h-3.5 text-blue-400" />
+                피해 정보 편집 / 밴드 추가
+              </button>
+            </div>
           ) : (
             <div className="flex items-center gap-2">
               <button
