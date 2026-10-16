@@ -1,0 +1,6 @@
+{
+  "name": "네이버 밴드 해킹 긴급 대처 센터",
+  "description": "네이버 밴드 해킹 및 방장(리더) 권한 탈취 피해 시 단계별 긴급 초동 조치, 고객센터 1:1 문의문 생성기, 회원 경고 전파문 작성 및 경찰 사이버수사국 신고 가이드",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
